@@ -1,16 +1,21 @@
 {
-  "name": "Layar Informasi Masjid",
-  "short_name": "Masjid TV",
-  "description": "Layar informasi masjid: waktu sholat, jadwal khatib, pengumuman, dan galeri dokumentasi.",
-  "start_url": "./index.html?src=GANTI_DENGAN_URL_JSON_ANDA",
-  "scope": "./",
-  "display": "fullscreen",
-  "orientation": "landscape",
-  "background_color": "#0B211A",
-  "theme_color": "#0F2A20",
-  "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+  "_meta": {
+    "savedAt": "2026-07-06T04:54:14.625Z",
+    "app": "masjid-tv-display",
+    "versi": 1
+  },
+  "masjid": {
+    "nama": "Takmir Masjid Baiturrahman Panjunan",
+    "alamat": "Dsn. Panjuanan, Ds. Tasikmadu, Kec. Paang, Kab. Tuban",
+    "logo": null,
+    "lat": -6.2088,
+    "lng": 106.8456,
+    "metode": "Singapore",
+    "madhab": "Shafi",
+    "slideDur": 8
+  },
+  "khatib": [],
+  "kegiatan": [],
+  "banner": [],
+  "galeri": []
 }
