@@ -1,0 +1,21 @@
+{
+  "_meta": {
+    "savedAt": "2026-07-06T04:53:08.008Z",
+    "app": "masjid-tv-display",
+    "versi": 1
+  },
+  "masjid": {
+    "nama": "Takmir Masjid Baiturrahman Panjunan",
+    "alamat": "Dsn. Panjuanan, Ds. Tasikmadu, Kec. Paang, Kab. Tuban",
+    "logo": null,
+    "lat": -6.2088,
+    "lng": 106.8456,
+    "metode": "Singapore",
+    "madhab": "Shafi",
+    "slideDur": 8
+  },
+  "khatib": [],
+  "kegiatan": [],
+  "banner": [],
+  "galeri": []
+}
