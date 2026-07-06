@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Layar Informasi Masjid</title>
+<meta name="theme-color" content="#0F2A20">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/adhan@4.4.4/lib/bundles/adhan.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════════════════════
+   PALET & DASAR
+   Hijau tua masjid + emas ornamen — mengikuti identitas sistem HP,
+   tapi digelapkan untuk kontras layar TV dari jarak jauh.
+══════════════════════════════════════════════════════ */
+:root{
+  --bg1:#0B211A; --bg2:#173C2C; --panel:#123226;
+  --emas:#D9AE55; --emas-dim:#8E7038;
+  --krem:#F6F0DD; --krem-dim:#C9C2A8;
+  --garis:rgba(217,174,85,0.28);
+  --merah-lembut:#E2A6A6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg1)}
+body{
+  font-family:'Poppins',sans-serif;color:var(--krem);
+  background:radial-gradient(ellipse at top,var(--bg2) 0%,var(--bg1) 70%);
+  display:flex;flex-direction:column;height:100vh;position:relative;
+}
+.font-display{font-family:'Amiri',serif}
+
+/* Bingkai ornamen tepi layar — motif geometris islami tipis, elemen ciri khas halaman ini */
+.ornament-frame{position:fixed;inset:0;pointer-events:none;z-index:5;
+  border:2px solid var(--garis);
+  box-shadow:inset 0 0 0 10px rgba(11,33,26,0.001);
+}
+.ornament-corner{position:fixed;width:64px;height:64px;z-index:6;opacity:.85}
+.oc-tl{top:10px;left:10px} .oc-tr{top:10px;right:10px;transform:scaleX(-1)}
+.oc-bl{bottom:10px;left:10px;transform:scaleY(-1)} .oc-br{bottom:10px;right:10px;transform:scale(-1,-1)}
+
+/* ══════════════════════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════════════════════ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:26px 46px 18px;flex-shrink:0;position:relative;z-index:2;
+}
+.tb-left{display:flex;align-items:center;gap:20px;min-width:0}
+.tb-logo{width:64px;height:64px;border-radius:14px;object-fit:cover;flex-shrink:0;
+  border:2px solid var(--emas-dim);background:var(--panel)}
+.tb-logo-fallback{width:64px;height:64px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(160deg,var(--emas),#a9843b);display:flex;align-items:center;justify-content:center;font-size:30px}
+.tb-nama{font-family:'Amiri',serif;font-weight:700;font-size:34px;color:var(--krem);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:64vw;letter-spacing:.3px}
+.tb-alamat{font-size:15px;color:var(--krem-dim);margin-top:2px;font-weight:400}
+.tb-right{text-align:right;flex-shrink:0}
+.tb-tanggal{font-size:17px;color:var(--krem-dim);font-weight:500}
+.tb-hijriah{font-size:14px;color:var(--emas);font-weight:600;margin-top:2px}
+.tb-jam{font-family:'Poppins',sans-serif;font-weight:700;font-size:46px;color:var(--emas);
+  letter-spacing:1px;line-height:1.1;margin-top:4px;font-variant-numeric:tabular-nums}
+
+/* ══════════════════════════════════════════════════════
+   AREA KONTEN (SLIDE BERGANTI)
+══════════════════════════════════════════════════════ */
+.stage{flex:1;position:relative;padding:6px 46px;min-height:0;z-index:2}
+.slide{
+  position:absolute;inset:6px 46px;display:flex;flex-direction:column;
+  opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease;pointer-events:none;
+}
+.slide.active{opacity:1;transform:translateY(0);pointer-events:auto}
+
+.slide-heading{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-shrink:0}
+.slide-heading .dot{width:10px;height:10px;border-radius:50%;background:var(--emas)}
+.slide-heading h2{font-family:'Amiri',serif;font-size:26px;font-weight:700;color:var(--emas);letter-spacing:.5px}
+
+/* -- Slide: Khatib -- */
+.khatib-list{display:flex;flex-direction:column;gap:14px;overflow:hidden;flex:1;justify-content:center}
+.khatib-card{
+  background:var(--panel);border:1px solid var(--garis);border-radius:16px;
+  padding:20px 28px;display:flex;align-items:center;gap:22px;
+}
+.khatib-card.next{border-color:var(--emas);box-shadow:0 0 0 1px var(--emas) inset}
+.khatib-tgl{font-size:15px;color:var(--krem-dim);width:170px;flex-shrink:0;line-height:1.35}
+.khatib-tgl b{display:block;color:var(--emas);font-size:16px}
+.khatib-body{flex:1;min-width:0}
+.khatib-nama{font-size:22px;font-weight:600;color:var(--krem)}
+.khatib-tema{font-size:15px;color:var(--krem-dim);margin-top:3px}
+.khatib-jenis{font-size:12px;font-weight:700;color:var(--bg1);background:var(--emas);
+  padding:4px 12px;border-radius:20px;flex-shrink:0;letter-spacing:.3px}
+
+/* -- Slide: Kegiatan -- */
+.kegiatan-list{display:flex;flex-direction:column;gap:14px;overflow:hidden;flex:1;justify-content:center}
+.kegiatan-card{background:var(--panel);border:1px solid var(--garis);border-radius:16px;padding:18px 28px;display:flex;gap:22px;align-items:center}
+.kegiatan-tgl{width:150px;flex-shrink:0;text-align:center}
+.kegiatan-tgl .d{font-size:32px;font-weight:800;color:var(--emas);line-height:1}
+.kegiatan-tgl .m{font-size:13px;color:var(--krem-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.kegiatan-tgl .j{font-size:13px;color:var(--krem-dim);margin-top:4px}
+.kegiatan-body{flex:1;min-width:0}
+.kegiatan-judul{font-size:22px;font-weight:600;color:var(--krem)}
+.kegiatan-ket{font-size:15px;color:var(--krem-dim);margin-top:3px}
+
+/* -- Slide: Banner custom -- */
+.banner-wrap{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 40px}
+.banner-teks{font-family:'Amiri',serif;font-size:38px;line-height:1.5;color:var(--krem);font-weight:700;max-width:1100px}
+.banner-icon{font-size:52px;margin-bottom:18px}
+
+/* -- Slide: Galeri -- */
+.galeri-wrap{flex:1;display:flex;flex-direction:column;min-height:0}
+.galeri-img-wrap{flex:1;border-radius:18px;overflow:hidden;border:1px solid var(--garis);position:relative;min-height:0}
+.galeri-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.galeri-caption{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(0deg,rgba(0,0,0,.72),transparent);
+  color:#fff;padding:26px 30px 16px;font-size:18px;font-weight:500}
+
+/* -- Empty state umum -- */
+.slide-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--krem-dim);gap:10px}
+.slide-empty .ic{font-size:44px;opacity:.6}
+
+/* -- Titik indikator slide -- */
+.dots{display:flex;gap:7px;justify-content:center;padding:4px 0 0;flex-shrink:0;position:relative;z-index:2}
+.dots span{width:7px;height:7px;border-radius:50%;background:rgba(217,174,85,0.28);transition:background .3s}
+.dots span.active{background:var(--emas)}
+
+/* ══════════════════════════════════════════════════════
+   BOTTOM BAR — WAKTU SHOLAT (SELALU TAMPIL)
+══════════════════════════════════════════════════════ */
+.solatbar{
+  display:flex;gap:2px;padding:16px 24px 22px;flex-shrink:0;position:relative;z-index:2;
+}
+.solat-item{
+  flex:1;background:var(--panel);border:1px solid var(--garis);
+  margin:0 6px;border-radius:16px;padding:14px 8px 12px;text-align:center;
+  transition:transform .4s ease,background .4s ease,border-color .4s ease;
+}
+.solat-item .nm{font-size:15px;color:var(--krem-dim);letter-spacing:.5px;text-transform:uppercase;font-weight:600}
+.solat-item .jm{font-family:'Poppins',sans-serif;font-weight:700;font-size:30px;color:var(--krem);margin-top:6px;font-variant-numeric:tabular-nums}
+.solat-item.next{
+  background:linear-gradient(160deg,var(--emas),#a9843b);
+  transform:translateY(-10px) scale(1.08);
+  border-color:var(--emas);
+  box-shadow:0 12px 30px rgba(217,174,85,0.35);
+}
+.solat-item.next .nm{color:#3c2e0f}
+.solat-item.next .jm{color:#241b09;font-size:38px}
+.solat-item.next .cd{font-size:13px;color:#3c2e0f;font-weight:600;margin-top:3px}
+
+/* Layar konfigurasi awal (kalau ?src= belum diisi & belum ada cache) */
+.setup{position:fixed;inset:0;background:var(--bg1);z-index:50;display:flex;align-items:center;justify-content:center;padding:40px}
+.setup-box{max-width:640px;text-align:center;color:var(--krem)}
+.setup-box h1{font-family:'Amiri',serif;font-size:30px;color:var(--emas);margin-bottom:16px}
+.setup-box p{font-size:16px;line-height:1.7;color:var(--krem-dim);margin-bottom:10px}
+.setup-box code{background:var(--panel);padding:2px 8px;border-radius:6px;color:var(--emas)}
+
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="ornament-frame"></div>
+<svg class="ornament-corner oc-tl" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 2 L2 22 M2 2 L22 2" stroke="#D9AE55" stroke-width="2"/>
+  <circle cx="2" cy="2" r="5" stroke="#D9AE55" stroke-width="1.5"/>
+  <path d="M14 2 Q22 2 22 10" stroke="#D9AE55" stroke-width="1.5"/>
+</svg>
+<svg class="ornament-corner oc-tr" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 2 L2 22 M2 2 L22 2" stroke="#D9AE55" stroke-width="2"/>
+  <circle cx="2" cy="2" r="5" stroke="#D9AE55" stroke-width="1.5"/>
+  <path d="M14 2 Q22 2 22 10" stroke="#D9AE55" stroke-width="1.5"/>
+</svg>
+<svg class="ornament-corner oc-bl" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 2 L2 22 M2 2 L22 2" stroke="#D9AE55" stroke-width="2"/>
+  <circle cx="2" cy="2" r="5" stroke="#D9AE55" stroke-width="1.5"/>
+  <path d="M14 2 Q22 2 22 10" stroke="#D9AE55" stroke-width="1.5"/>
+</svg>
+<svg class="ornament-corner oc-br" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M2 2 L2 22 M2 2 L22 2" stroke="#D9AE55" stroke-width="2"/>
+  <circle cx="2" cy="2" r="5" stroke="#D9AE55" stroke-width="1.5"/>
+  <path d="M14 2 Q22 2 22 10" stroke="#D9AE55" stroke-width="1.5"/>
+</svg>
+
+<!-- LAYAR SETUP (tampil jika sumber data belum dikonfigurasi) -->
+<div class="setup" id="setup-screen">
+  <div class="setup-box">
+    <h1>Layar Informasi Masjid</h1>
+    <p>Sumber data belum diatur. Buka URL ini dengan tambahan parameter <code>?src=</code> yang berisi alamat file <b>tv-display.json</b> publik dari GitHub, contoh:</p>
+    <p><code id="setup-example">index.html?src=https://raw.githubusercontent.com/USER/REPO/main/tv-display.json</code></p>
+    <p>Setelah dibuka sekali dengan alamat yang benar, pengaturan ini akan diingat otomatis di perangkat ini.</p>
+  </div>
+</div>
+
+<div id="app-root" class="hidden">
+  <div class="topbar">
+    <div class="tb-left">
+      <img id="tb-logo-img" class="tb-logo hidden" alt="Logo">
+      <div id="tb-logo-fallback" class="tb-logo-fallback">🕌</div>
+      <div style="min-width:0">
+        <div class="tb-nama" id="tb-nama">Masjid</div>
+        <div class="tb-alamat" id="tb-alamat"></div>
+      </div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-tanggal" id="tb-tanggal">–</div>
+      <div class="tb-hijriah" id="tb-hijriah"></div>
+      <div class="tb-jam" id="tb-jam">--:--:--</div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+  <div class="dots" id="dots"></div>
+
+  <div class="solatbar" id="solatbar"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   KONFIGURASI SUMBER DATA
+══════════════════════════════════════════════════════ */
+const LS_SRC='masjid_tv_src_url';
+const LS_CACHE='masjid_tv_last_data';
+const params=new URLSearchParams(location.search);
+let SRC=params.get('src')||localStorage.getItem(LS_SRC)||'';
+if(params.get('src')) localStorage.setItem(LS_SRC,params.get('src'));
+
+let DATA=null;               // data terakhir yang berhasil diambil
+let PRAYER_TIMES=null;       // hasil hitung adhan.js untuk hari ini
+let contentSlides=[];        // daftar slide konten (di luar bar sholat yang selalu tampil)
+let curSlideIdx=0;
+let slideDurMs=8000;
+let slideTimer=null;
+
+function initApp(){
+  if(!SRC){
+    document.getElementById('setup-screen').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('app-root').classList.remove('hidden');
+  loadCachedData();
+  fetchData();
+  setInterval(fetchData,5*60*1000); // refresh data tiap 5 menit
+  tickClock();
+  setInterval(tickClock,1000);
+}
+
+function loadCachedData(){
+  try{
+    const raw=localStorage.getItem(LS_CACHE);
+    if(raw){ DATA=JSON.parse(raw); applyData(); }
+  }catch(e){}
+}
+
+async function fetchData(){
+  try{
+    const res=await fetch(SRC+(SRC.includes('?')?'&':'?')+'_ts='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const j=await res.json();
+    DATA=j;
+    localStorage.setItem(LS_CACHE,JSON.stringify(j));
+    applyData();
+  }catch(e){
+    console.warn('Gagal ambil data terbaru, memakai data tersimpan terakhir.',e);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   TERAPKAN DATA KE TAMPILAN
+══════════════════════════════════════════════════════ */
+function applyData(){
+  if(!DATA) return;
+  const m=DATA.masjid||{};
+  document.getElementById('tb-nama').textContent=m.nama||'Masjid';
+  document.getElementById('tb-alamat').textContent=m.alamat||'';
+  if(m.logo){
+    const img=document.getElementById('tb-logo-img');
+    img.src=m.logo; img.classList.remove('hidden');
+    document.getElementById('tb-logo-fallback').classList.add('hidden');
+  }
+  slideDurMs=(parseInt(m.slideDur)||8)*1000;
+  computePrayerTimes();
+  renderSolatBar();
+  buildContentSlides();
+}
+
+/* ══════════════════════════════════════════════════════
+   JAM & TANGGAL
+══════════════════════════════════════════════════════ */
+function tickClock(){
+  const now=new Date();
+  document.getElementById('tb-jam').textContent=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('tb-tanggal').textContent=now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  try{
+    const h=new Intl.DateTimeFormat('id-ID-u-ca-islamic',{day:'numeric',month:'long',year:'numeric'}).format(now);
+    document.getElementById('tb-hijriah').textContent=h+' H';
+  }catch(e){}
+  // Refresh sorot "waktu berikutnya" tiap detik supaya hitung mundur & posisi next selalu akurat
+  if(PRAYER_TIMES) renderSolatBar();
+}
+
+/* ══════════════════════════════════════════════════════
+   HITUNG WAKTU SHOLAT (adhan.js)
+══════════════════════════════════════════════════════ */
+const ADHAN_METHODS={
+  Singapore:()=>adhan.CalculationMethod.Singapore(),
+  MuslimWorldLeague:()=>adhan.CalculationMethod.MuslimWorldLeague(),
+  Egyptian:()=>adhan.CalculationMethod.Egyptian(),
+  UmmAlQura:()=>adhan.CalculationMethod.UmmAlQura(),
+  Karachi:()=>adhan.CalculationMethod.Karachi(),
+  MoonsightingCommittee:()=>adhan.CalculationMethod.MoonsightingCommittee(),
+  NorthAmerica:()=>adhan.CalculationMethod.NorthAmerica(),
+  Kuwait:()=>adhan.CalculationMethod.Kuwait(),
+  Qatar:()=>adhan.CalculationMethod.Qatar(),
+  Dubai:()=>adhan.CalculationMethod.Dubai(),
+  Tehran:()=>adhan.CalculationMethod.Tehran(),
+};
+function computePrayerTimes(){
+  const m=(DATA&&DATA.masjid)||{};
+  if(m.lat==null||m.lng==null||typeof adhan==='undefined'){ PRAYER_TIMES=null; return; }
+  const coords=new adhan.Coordinates(parseFloat(m.lat),parseFloat(m.lng));
+  const paramsFn=ADHAN_METHODS[m.metode]||ADHAN_METHODS.Singapore;
+  const p=paramsFn();
+  p.madhab=m.madhab==='Hanafi'?adhan.Madhab.Hanafi:adhan.Madhab.Shafi;
+  PRAYER_TIMES=new adhan.PrayerTimes(coords,new Date(),p);
+}
+function fmtJam(d){ return d?d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',hour12:false}):'--:--'; }
+function renderSolatBar(){
+  const bar=document.getElementById('solatbar');
+  if(!PRAYER_TIMES){
+    bar.innerHTML=`<div class="slide-empty" style="flex:1"><div class="ic">📍</div>Koordinat masjid belum diatur di sistem HP.</div>`;
+    return;
+  }
+  const items=[
+    {nm:'Subuh',t:PRAYER_TIMES.fajr},
+    {nm:'Terbit',t:PRAYER_TIMES.sunrise},
+    {nm:'Dzuhur',t:PRAYER_TIMES.dhuhr},
+    {nm:'Ashar',t:PRAYER_TIMES.asr},
+    {nm:'Maghrib',t:PRAYER_TIMES.maghrib},
+    {nm:'Isya',t:PRAYER_TIMES.isha},
+  ];
+  const now=new Date();
+  // tentukan waktu sholat berikutnya (lewati "Terbit" karena bukan waktu sholat)
+  let nextIdx=-1;
+  for(let i=0;i<items.length;i++){
+    if(items[i].nm==='Terbit') continue;
+    if(items[i].t && items[i].t>now){ nextIdx=i; break; }
+  }
+  bar.innerHTML=items.map((it,i)=>{
+    const isNext=i===nextIdx;
+    let cd='';
+    if(isNext){
+      const diffMs=it.t-now;
+      const h=Math.floor(diffMs/3600000), mnt=Math.floor((diffMs%3600000)/60000);
+      cd=`<div class="cd">${h>0?h+' jam ':''}${mnt} menit lagi</div>`;
+    }
+    return `<div class="solat-item${isNext?' next':''}">
+      <div class="nm">${it.nm}</div>
+      <div class="jm">${fmtJam(it.t)}</div>
+      ${cd}
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   BANGUN DAFTAR SLIDE KONTEN & RENDER
+══════════════════════════════════════════════════════ */
+function buildContentSlides(){
+  const stage=document.getElementById('stage');
+  const todayStr=new Date().toISOString().split('T')[0];
+  const slides=[];
+
+  // 1) Khatib — tampilkan jadwal ke depan (maks 4), jadwal terdekat ditandai
+  const khatibUpcoming=(DATA.khatib||[]).filter(k=>k.tanggal>=todayStr).sort((a,b)=>a.tanggal.localeCompare(b.tanggal)).slice(0,4);
+  slides.push({type:'khatib',title:'Jadwal Khatib',icon:'🕌',render:()=>{
+    if(!khatibUpcoming.length) return emptyHtml('🕌','Belum ada jadwal khatib mendatang.');
+    return `<div class="khatib-list">${khatibUpcoming.map((k,i)=>`
+      <div class="khatib-card${i===0?' next':''}">
+        <div class="khatib-tgl"><b>${fmtTglLong(k.tanggal)}</b>${k.jenis||''}</div>
+        <div class="khatib-body"><div class="khatib-nama">${esc(k.nama)}</div>${k.tema?`<div class="khatib-tema">${esc(k.tema)}</div>`:''}</div>
+      </div>`).join('')}</div>`;
+  }});
+
+  // 2) Kegiatan — tampilkan yang aktif & belum lewat (maks 4)
+  const kegiatanUpcoming=(DATA.kegiatan||[]).filter(k=>k.tanggal>=todayStr).sort((a,b)=>a.tanggal.localeCompare(b.tanggal)).slice(0,4);
+  slides.push({type:'kegiatan',title:'Pengumuman Kegiatan',icon:'📢',render:()=>{
+    if(!kegiatanUpcoming.length) return emptyHtml('📢','Belum ada pengumuman kegiatan.');
+    return `<div class="kegiatan-list">${kegiatanUpcoming.map(k=>{
+      const d=new Date(k.tanggal+'T00:00:00');
+      return `<div class="kegiatan-card">
+        <div class="kegiatan-tgl">
+          <div class="d">${d.getDate()}</div>
+          <div class="m">${d.toLocaleDateString('id-ID',{month:'short'})}</div>
+          ${k.jam?`<div class="j">${k.jam}</div>`:''}
+        </div>
+        <div class="kegiatan-body"><div class="kegiatan-judul">${esc(k.judul)}</div>${k.ket?`<div class="kegiatan-ket">${esc(k.ket)}</div>`:''}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }});
+
+  // 3) Banner custom — satu slide per pengumuman
+  (DATA.banner||[]).forEach(b=>{
+    slides.push({type:'banner',title:'Pengumuman',icon:'📝',render:()=>`
+      <div class="banner-wrap"><div>
+        <div class="banner-icon">📝</div>
+        <div class="banner-teks">${esc(b.teks)}</div>
+      </div></div>`});
+  });
+
+  // 4) Galeri — satu slide per foto
+  (DATA.galeri||[]).forEach(g=>{
+    slides.push({type:'galeri',title:'Dokumentasi',icon:'🖼️',render:()=>`
+      <div class="galeri-wrap"><div class="galeri-img-wrap">
+        <img src="${g.img}" alt="Dokumentasi">
+        ${g.caption?`<div class="galeri-caption">${esc(g.caption)}</div>`:''}
+      </div></div>`});
+  });
+
+  if(!slides.length){
+    slides.push({type:'kosong',title:'Selamat Datang',icon:'🕌',render:()=>emptyHtml('🕌','Belum ada pengumuman, jadwal khatib, atau dokumentasi yang ditambahkan.')});
+  }
+
+  contentSlides=slides;
+  curSlideIdx=Math.min(curSlideIdx,slides.length-1);
+  stage.innerHTML=slides.map((s,i)=>`
+    <div class="slide" data-i="${i}">
+      <div class="slide-heading"><span class="dot"></span><h2>${s.icon} ${s.title}</h2></div>
+      ${s.render()}
+    </div>`).join('');
+  renderDots();
+  showSlide(curSlideIdx,true);
+  restartSlideTimer();
+}
+function emptyHtml(ic,txt){ return `<div class="slide-empty"><div class="ic">${ic}</div>${txt}</div>`; }
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtTglLong(s){ if(!s) return ''; const d=new Date(s+'T00:00:00'); return d.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'}); }
+
+function renderDots(){
+  const dotsEl=document.getElementById('dots');
+  dotsEl.innerHTML=contentSlides.map((_,i)=>`<span data-i="${i}"></span>`).join('');
+}
+function showSlide(i,skipAnim){
+  const slidesEl=document.querySelectorAll('.slide');
+  slidesEl.forEach(el=>el.classList.toggle('active',parseInt(el.dataset.i)===i));
+  document.querySelectorAll('#dots span').forEach(el=>el.classList.toggle('active',parseInt(el.dataset.i)===i));
+  curSlideIdx=i;
+}
+function nextSlide(){
+  if(!contentSlides.length) return;
+  showSlide((curSlideIdx+1)%contentSlides.length);
+}
+function restartSlideTimer(){
+  if(slideTimer) clearInterval(slideTimer);
+  if(contentSlides.length>1) slideTimer=setInterval(nextSlide,slideDurMs);
+}
+
+initApp();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
